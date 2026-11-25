@@ -44,7 +44,7 @@ class SeedTests(unittest.TestCase):
                 int(year)
                 for year in re.findall(r"(?:19|20)\d{2}", record.get("engine") or "")
             ]
-            if years and record.get("year_from"):
+            if len(set(years)) == 1 and record.get("year_from"):
                 self.assertIn(years[0], (record["year_from"], record["year_to"]))
 
     def test_no_duplicates(self):

@@ -34,11 +34,14 @@ def normalize(record):
         for year in re.findall(r"(?:19|20)\d{2}", result.get("engine") or "")
         if 1900 <= int(year) <= 2100
     ]
-    for key in ("year_from", "year_to"):
+    for key, year in (
+        ("year_from", engine_years[0] if engine_years else None),
+        ("year_to", engine_years[-1] if engine_years else None),
+    ):
         value = result.get(key)
-        if not (isinstance(value, int) and 1900 <= value <= 2100):
-            value = engine_years[0] if engine_years else None
-        result[key] = value
+        result[key] = (
+            value if isinstance(value, int) and 1900 <= value <= 2100 else year
+        )
     capacity = result.get("capacity_liters")
     result["capacity_liters"] = (
         float(capacity)

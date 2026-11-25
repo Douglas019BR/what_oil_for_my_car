@@ -14,7 +14,14 @@ def ensure_bucket():
     try:
         s3.head_bucket(Bucket=BUCKET)
     except s3.exceptions.ClientError:
-        s3.create_bucket(Bucket=BUCKET)
+        region = s3.meta.region_name
+        if region and region != "us-east-1":
+            s3.create_bucket(
+                Bucket=BUCKET,
+                CreateBucketConfiguration={"LocationConstraint": region},
+            )
+        else:
+            s3.create_bucket(Bucket=BUCKET)
 
 
 def upload(file_path, key):
@@ -33,7 +40,7 @@ def wait_for_job(job_id):
     while True:
         response = textract.get_document_analysis(JobId=job_id)
         status = response["JobStatus"]
-        if status in ("SUCCEEDED", "FAILED"):
+        if status in ("SUCCEEDED", "FAILED", "PARTIAL_SUCCESS"):
             return response
         time.sleep(5)
 
@@ -90,6 +97,15 @@ def process(file_path):
     if result["JobStatus"] == "FAILED":
         print(f"FAILED: {filename}")
         return
+    if result["JobStatus"] == "PARTIAL_SUCCESS":
+        pages = sorted(
+            {
+                page
+                for warning in result.get("Warnings", [])
+                for page in warning.get("Pages", [])
+            }
+        )
+        print(f"PARTIAL_SUCCESS: {filename} — affected pages: {pages or 'unknown'}")
     blocks = get_all_blocks(job_id)
     print_tables(blocks, filename)
 

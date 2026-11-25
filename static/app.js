@@ -8,6 +8,7 @@ const bodyEl = document.getElementById('results-body');
 const countEl = document.getElementById('result-count');
 
 let selectedVariant = null;
+let recommendationRequestId = 0;
 
 function setStatus(message) {
   statusEl.textContent = message;
@@ -60,8 +61,8 @@ async function loadModels() {
   selectedVariant = null;
   fillSelect(variantSelect, [], 'Todas as versões');
   clearResults('Selecione um modelo para ver as recomendações.');
+  fillSelect(modelSelect, [], 'Selecione o modelo');
   if (!make) {
-    fillSelect(modelSelect, [], 'Selecione o modelo');
     return;
   }
   try {
@@ -78,6 +79,7 @@ async function loadVariants() {
   const make = makeSelect.value;
   const model = modelSelect.value;
   selectedVariant = null;
+  fillSelect(variantSelect, [], 'Todas as versões');
   if (!make || !model) {
     clearResults('Selecione um modelo para ver as recomendações.');
     return;
@@ -103,6 +105,7 @@ function formatCell(value) {
 }
 
 async function loadRecommendations() {
+  const requestId = ++recommendationRequestId;
   const make = makeSelect.value;
   const model = modelSelect.value;
   if (!make || !model) {
@@ -112,6 +115,7 @@ async function loadRecommendations() {
 
   const params = new URLSearchParams({ make, model });
   if (selectedVariant) {
+    params.set('exact', '1');
     if (selectedVariant.engine) params.set('engine', selectedVariant.engine);
     if (selectedVariant.year_from !== null) params.set('year_from', selectedVariant.year_from);
     if (selectedVariant.year_to !== null) params.set('year_to', selectedVariant.year_to);
@@ -120,6 +124,7 @@ async function loadRecommendations() {
   try {
     setStatus('Buscando recomendações...');
     const rows = await fetchJson(`/api/recommendations?${params}`);
+    if (requestId !== recommendationRequestId) return;
     bodyEl.innerHTML = '';
     for (const row of rows) {
       const tr = document.createElement('tr');
@@ -146,6 +151,7 @@ async function loadRecommendations() {
       : 'Nenhuma recomendação encontrada para esta combinação.';
     setStatus('');
   } catch (error) {
+    if (requestId !== recommendationRequestId) return;
     clearResults(error.message);
   }
 }

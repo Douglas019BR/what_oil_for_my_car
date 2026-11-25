@@ -209,8 +209,10 @@ def list_variants(conn, make, model):
     ]
 
 
-def get_recommendations(conn, make, model, engine=None, year_from=None, year_to=None):
-    rows = conn.execute(
+def get_recommendations(
+    conn, make, model, engine=None, year_from=None, year_to=None, exact=False
+):
+    query = (
         "SELECT b.name AS oil_brand, o.name AS oil_name, o.sae_viscosity, o.oil_type, "
         "r.capacity_liters, r.source_pdf, r.notes "
         "FROM vehicles v "
@@ -218,12 +220,17 @@ def get_recommendations(conn, make, model, engine=None, year_from=None, year_to=
         "JOIN oils o ON o.id = r.oil_id "
         "JOIN oil_brands b ON b.id = o.brand_id "
         "WHERE v.make = %s AND v.model = %s "
-        "AND (%s::text IS NULL OR v.engine IS NOT DISTINCT FROM %s::text) "
-        "AND (%s::int IS NULL OR v.year_from IS NOT DISTINCT FROM %s::int) "
-        "AND (%s::int IS NULL OR v.year_to IS NOT DISTINCT FROM %s::int) "
-        "ORDER BY b.name, o.name",
-        (make, model, engine, engine, year_from, year_from, year_to, year_to),
-    ).fetchall()
+    )
+    params = [make, model]
+    if exact:
+        query += (
+            "AND v.engine IS NOT DISTINCT FROM %s::text "
+            "AND v.year_from IS NOT DISTINCT FROM %s::int "
+            "AND v.year_to IS NOT DISTINCT FROM %s::int "
+        )
+        params.extend((engine, year_from, year_to))
+    query += "ORDER BY b.name, o.name"
+    rows = conn.execute(query, params).fetchall()
     return [
         {
             "oil_brand": row["oil_brand"],

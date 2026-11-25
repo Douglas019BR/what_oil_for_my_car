@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATABASE_URL = "postgresql://whatoil:whatoil@localhost:5433/whatoil"
+DEFAULT_DATABASE_URL = (
+    "postgresql://whatoil:whatoil@localhost:5433/whatoil"  # pragma: allowlist secret
+)
 DEFAULT_TEST_DATABASE = "what_oil_test"
 
 
@@ -21,9 +23,14 @@ def load_env():
 
 def replace_database(url, name):
     parts = urlsplit(url)
-    return urlunsplit(
-        (parts.scheme, parts.netloc, f"/{name}", parts.query, parts.fragment)
+    query = urlencode(
+        [
+            (key, value)
+            for key, value in parse_qsl(parts.query, keep_blank_values=True)
+            if key.lower() != "dbname"
+        ]
     )
+    return urlunsplit((parts.scheme, parts.netloc, f"/{name}", query, parts.fragment))
 
 
 def database_url(test=False):

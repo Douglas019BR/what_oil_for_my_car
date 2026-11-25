@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import psycopg
@@ -9,6 +10,7 @@ from app import db
 from app.config import database_url
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+logger = logging.getLogger(__name__)
 app = FastAPI(title="Qual óleo para meu carro")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -23,10 +25,9 @@ def health():
     try:
         count = db.healthcheck(database_url())
         return {"status": "ok", "recommendations": count}
-    except psycopg.Error as exc:
-        return JSONResponse(
-            status_code=503, content={"status": "error", "detail": str(exc)}
-        )
+    except psycopg.Error:
+        logger.exception("Database health check failed")
+        return JSONResponse(status_code=503, content={"status": "error"})
 
 
 @app.get("/api/makes")
@@ -54,6 +55,9 @@ def recommendations(
     engine: str | None = None,
     year_from: int | None = None,
     year_to: int | None = None,
+    exact: bool = False,
 ):
     with db.connection(database_url()) as conn:
-        return db.get_recommendations(conn, make, model, engine, year_from, year_to)
+        return db.get_recommendations(
+            conn, make, model, engine, year_from, year_to, exact
+        )

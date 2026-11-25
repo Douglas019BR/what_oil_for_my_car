@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import psycopg
+from psycopg.conninfo import conninfo_to_dict
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -13,7 +14,7 @@ from app.db import SEED_PATH, healthcheck, initialize
 
 def ensure_database(dsn):
     admin = admin_url(dsn)
-    name = dsn.rstrip("/").split("/")[-1].split("?")[0]
+    name = conninfo_to_dict(dsn).get("dbname", "")
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
         raise ValueError(f"Invalid database name in DSN: {name!r}")
     with psycopg.connect(admin, autocommit=True) as conn:

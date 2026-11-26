@@ -12,22 +12,41 @@ let recommendationRequestId = 0;
 
 const themeToggle = document.getElementById('theme-toggle');
 const THEME_KEY = 'what-oil-theme';
+let currentTheme = null;
+
+function readStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeTheme(theme) {
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    return false;
+  }
+  return true;
+}
 
 function preferredTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
+  const saved = readStoredTheme();
   if (saved === 'dark' || saved === 'light') return saved;
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function applyTheme(theme) {
+  currentTheme = theme;
   document.documentElement.dataset.theme = theme;
   themeToggle.textContent = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
   themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
 }
 
 themeToggle.addEventListener('click', () => {
-  const next = preferredTheme() === 'dark' ? 'light' : 'dark';
-  localStorage.setItem(THEME_KEY, next);
+  const next = currentTheme === 'dark' ? 'light' : 'dark';
+  storeTheme(next);
   applyTheme(next);
 });
 

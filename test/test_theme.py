@@ -25,10 +25,18 @@ class ThemeTests(unittest.TestCase):
         self.assertIn("color: var(--fg)", self.css)
 
     def test_js_persists_theme_choice(self):
-        self.assertIn("localStorage.setItem(THEME_KEY, next)", self.js)
+        self.assertIn("localStorage.setItem(THEME_KEY, theme)", self.js)
         self.assertIn("document.documentElement.dataset.theme", self.js)
         self.assertIn("prefers-color-scheme: dark", self.js)
         self.assertIn("themeToggle.addEventListener('click'", self.js)
+
+    def test_js_handles_storage_failures(self):
+        self.assertIn("function readStoredTheme()", self.js)
+        self.assertIn("function storeTheme(theme)", self.js)
+        self.assertIn("let currentTheme = null", self.js)
+        self.assertIn("storeTheme(next)", self.js)
+        self.assertIn("applyTheme(next)", self.js)
+        self.assertEqual(self.js.count("  } catch {"), 2)
 
 
 if __name__ == "__main__":

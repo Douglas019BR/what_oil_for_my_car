@@ -59,7 +59,14 @@ class ApiTests(unittest.TestCase):
     def test_recommendations(self):
         response = self.client.get(
             "/api/recommendations",
-            params={"make": "Audi", "model": "A1", "engine": "1.4", "exact": "true"},
+            params={
+                "make": "Volkswagen",
+                "model": "FOX",
+                "engine": "1.6 L4 MSI 16V (F)",
+                "year_from": 2015,
+                "year_to": 2021,
+                "exact": "true",
+            },
         )
         self.assertEqual(response.status_code, 200)
         rows = response.json()
@@ -67,10 +74,16 @@ class ApiTests(unittest.TestCase):
         self.assertIn("oil_name", rows[0])
 
     def test_exact_variant_filters_null_fields(self):
-        params = {"make": "Chevrolet", "model": "COBALT"}
+        params = {"make": "BMW", "model": "M5"}
         unfiltered = self.client.get("/api/recommendations", params=params).json()
         exact = self.client.get(
-            "/api/recommendations", params={**params, "year_to": 2016, "exact": "true"}
+            "/api/recommendations",
+            params={
+                **params,
+                "engine": "4.4 V8 DFI/Bi-TB 32V",
+                "year_from": 2017,
+                "exact": "true",
+            },
         ).json()
         self.assertTrue(exact)
         self.assertLess(len(exact), len(unfiltered))

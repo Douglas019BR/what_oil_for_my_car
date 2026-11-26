@@ -9,10 +9,11 @@ CORRECTIONS_PATH = ROOT / "data" / "corrections.json"
 
 FRAGMENTS = [
     "seed_pdv.json",
-    "seed_ipiranga.json",
+    "seed_ipiranga2025.json",
     "seed_petronas.json",
-    "seed_total.json",
+    "seed_total2026.json",
     "seed_valvoline.json",
+    "seed_ypf2026.json",
 ]
 
 REQUIRED_TEXT = ("make", "model", "oil_brand", "oil_name")

@@ -28,8 +28,22 @@ O Postgres fica disponível em `localhost:5433` (banco/usuário/senha `whatoil`)
 2. Cada tabela é revisada e curada em um fragmento `data/raw/seed_*.json` (um por PDF). Esses
    fragmentos são versionados e preservam a curadoria original; o `data/seed.json` é gerado deles.
 3. `scripts/merge_seeds.py` normaliza, valida, aplica `data/corrections.json` (correções revisadas
-   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 5.016
-   recomendações de 5 fabricantes de óleo).
+   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 6.493
+   recomendações de 7 fabricantes de óleo).
+
+Fontes ativas (a mais recente substitui a anterior do mesmo fabricante):
+
+| Fabricante de óleo | PDF de origem | Data |
+| :--- | :--- | :--- |
+| Supra | `Tabela-Lubrificacao-PDV.pdf` | 2015 |
+| Petronas | `Tabela - Petronas.pdf` | 2014 |
+| Valvoline | `Valvoline-Tabela-de-Veiculos-Leves-2023.pdf` | 2023 |
+| Ipiranga | `Tabela-Ipiranga-F1-Master-2025.pdf` | 2025 |
+| Total / Elf | `Tabela-TotalEnergies-Leves-2026.pdf` | 2026 |
+| YPF | `Tabela-YPF-Leves-2026-06.pdf` | 2026 |
+
+Os fragmentos das tabelas antigas de Ipiranga (`seed_ipiranga.json`) e Total
+(`seed_total.json`) permanecem versionados como histórico, mas não entram mais no seed.
 4. `scripts/build_db.py` aplica `sql/schema.sql` e carrega o seed no Postgres:
 
 ```bash

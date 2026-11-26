@@ -12,10 +12,22 @@ class SeedTests(unittest.TestCase):
         cls.seed = json.loads(SEED_PATH.read_text(encoding="utf-8"))
 
     def test_sources(self):
-        self.assertEqual(len(self.seed["meta"]["sources"]), 5)
+        sources = self.seed["meta"]["sources"]
+        self.assertEqual(len(sources), 6)
+        self.assertIn("Tabela-TotalEnergies-Leves-2026.pdf", sources)
+        self.assertIn("Tabela-Ipiranga-F1-Master-2025.pdf", sources)
+        self.assertIn("Tabela-YPF-Leves-2026-06.pdf", sources)
+        self.assertNotIn("Tabela-Total.pdf", sources)
+        self.assertNotIn("tabela-lubrificantes-carros.pdf", sources)
 
     def test_record_count(self):
-        self.assertGreater(len(self.seed["records"]), 4000)
+        self.assertGreater(len(self.seed["records"]), 6000)
+
+    def test_recent_brands_present(self):
+        brands = {record["oil_brand"] for record in self.seed["records"]}
+        self.assertIn("YPF", brands)
+        self.assertIn("Total", brands)
+        self.assertIn("Ipiranga", brands)
 
     def test_required_fields(self):
         for record in self.seed["records"]:

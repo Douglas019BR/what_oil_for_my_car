@@ -27,30 +27,39 @@ class DatabaseTests(unittest.TestCase):
 
     def test_filtered_recommendations(self):
         with db.connection(self.dsn) as conn:
-            rows = db.get_recommendations(conn, "Audi", "A1", "1.4", exact=True)
+            rows = db.get_recommendations(
+                conn,
+                "Volkswagen",
+                "FOX",
+                "1.6 L4 MSI 16V (F)",
+                2015,
+                2021,
+                exact=True,
+            )
         self.assertTrue(rows)
         self.assertTrue(all(row["oil_brand"] for row in rows))
 
     def test_unfiltered_recommendations(self):
         with db.connection(self.dsn) as conn:
-            all_rows = db.get_recommendations(conn, "Audi", "A1")
+            all_rows = db.get_recommendations(conn, "Volkswagen", "FOX")
             filtered_rows = db.get_recommendations(
-                conn, "Audi", "A1", "1.4", exact=True
+                conn, "Volkswagen", "FOX", "1.6 L4 MSI 16V (F)", 2015, 2021, exact=True
             )
         self.assertGreater(len(all_rows), len(filtered_rows))
 
-    def test_exact_variant_with_null_engine_and_year_from(self):
+    def test_exact_variant_with_null_year_to(self):
         with db.connection(self.dsn) as conn:
             exact = db.get_recommendations(
-                conn, "Chevrolet", "COBALT", year_to=2016, exact=True
+                conn, "BMW", "M5", "4.4 V8 DFI/Bi-TB 32V", 2017, None, exact=True
             )
             expected = conn.execute(
                 "SELECT COUNT(*) AS count FROM vehicles v "
                 "JOIN recommendations r ON r.vehicle_id = v.id "
-                "WHERE v.make = 'Chevrolet' AND v.model = 'COBALT' "
-                "AND v.engine IS NULL AND v.year_from IS NULL AND v.year_to = 2016"
+                "WHERE v.make = 'BMW' AND v.model = 'M5' "
+                "AND v.engine = '4.4 V8 DFI/Bi-TB 32V' "
+                "AND v.year_from = 2017 AND v.year_to IS NULL"
             ).fetchone()["count"]
-            unfiltered = db.get_recommendations(conn, "Chevrolet", "COBALT")
+            unfiltered = db.get_recommendations(conn, "BMW", "M5")
         self.assertTrue(exact)
         self.assertEqual(len(exact), expected)
         self.assertLess(len(exact), len(unfiltered))

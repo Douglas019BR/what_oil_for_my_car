@@ -89,6 +89,73 @@ class SeedTests(unittest.TestCase):
             if "Rubia" in record["oil_name"]:
                 self.assertEqual(record["oil_brand"], "Total")
 
+    def test_no_standalone_code_bleed(self):
+        source = "Tabela-Ipiranga-F1-Master-2025.pdf"
+        uncoded = [
+            ("Chevrolet", "Equinox", "2.0 L4 DFI TB 16V", 2018),
+            ("Chevrolet", "Montana", "1.4 L4 MPFI 8V", 2009),
+            ("Toyota", "Corolla", "1.6 L4 MPFI 16V", 2007),
+            ("Porsche", "Panamera", "3.0 V6 DFI Bi-TB 24V", 2017),
+        ]
+        for make, model, engine, year in uncoded:
+            matches = [
+                record
+                for record in self.seed["records"]
+                if record["source_pdf"] == source
+                and record["make"] == make
+                and record["model"] == model
+                and record["engine"] == engine
+                and record["year_from"] == year
+            ]
+            self.assertEqual(matches, [], (make, model, engine, year))
+
+    def test_explicit_codes_are_kept(self):
+        expected = [
+            (
+                "Toyota",
+                "Corolla",
+                "1.6 L4 MPFI 16V",
+                2003,
+                "F1 Master Sintético 5W30 C2/C3",
+            ),
+            (
+                "Chevrolet",
+                "Equinox",
+                "1.5 L4 DFI TB 16V",
+                2021,
+                "F1 Master Sintético 0W20 SP",
+            ),
+        ]
+        for make, model, engine, year, oil in expected:
+            self.assertTrue(
+                any(
+                    record["source_pdf"] == "Tabela-Ipiranga-F1-Master-2025.pdf"
+                    and record["make"] == make
+                    and record["model"] == model
+                    and record["engine"] == engine
+                    and record["year_from"] == year
+                    and record["oil_name"] == oil
+                    for record in self.seed["records"]
+                ),
+                (make, model, engine, year, oil),
+            )
+
+    def test_suburban_year_from_source(self):
+        records = [
+            record
+            for record in self.seed["records"]
+            if record["make"] == "Chevrolet"
+            and record["model"] == "SUBURBAN"
+            and record["engine"] == "5.3 V8 DFI 16V(G)"
+        ]
+        self.assertTrue(records)
+        self.assertTrue(
+            all(
+                record["year_from"] == 2017 and record["year_to"] == 2017
+                for record in records
+            )
+        )
+
     def test_no_duplicates(self):
         keys = [tuple(sorted(record.items())) for record in self.seed["records"]]
         self.assertEqual(len(keys), len(set(keys)))

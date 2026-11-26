@@ -24,11 +24,13 @@ O Postgres fica disponível em `localhost:5433` (banco/usuário/senha `whatoil`)
 
 ## Como os dados são gerados
 
-1. `scripts/dump_pdf_text.py` converte cada PDF em texto (`data/raw/*.txt`, ignorado pelo git).
+1. `scripts/dump_pdf_text.py` converte cada PDF em texto nos modos `-layout` e `-raw`
+   (`data/raw/*.txt`, ignorado pelo git). O modo `-raw` preserva a ordem dos blocos de colunas e
+   foi usado na curadoria das tabelas mais recentes.
 2. Cada tabela é revisada e curada em um fragmento `data/raw/seed_*.json` (um por PDF). Esses
    fragmentos são versionados e preservam a curadoria original; o `data/seed.json` é gerado deles.
 3. `scripts/merge_seeds.py` normaliza, valida, aplica `data/corrections.json` (correções revisadas
-   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 6.493
+   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 6.567
    recomendações de 7 fabricantes de óleo).
 
 Fontes ativas (a mais recente substitui a anterior do mesmo fabricante):

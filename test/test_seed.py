@@ -59,6 +59,36 @@ class SeedTests(unittest.TestCase):
             if len(set(years)) == 1 and record.get("year_from"):
                 self.assertIn(years[0], (record["year_from"], record["year_to"]))
 
+    def test_no_concatenated_engines(self):
+        for record in self.seed["records"]:
+            engine = record.get("engine") or ""
+            self.assertIsNone(
+                re.search(r"\d\.\d\s+V\d\s+(?![-/(])\d\.\d\s+V\d", engine), engine
+            )
+
+    def test_no_impossible_model_engine_pairs(self):
+        forbidden = {
+            ("Chevrolet", "Camaro"): ("2.4 L4",),
+            ("Chevrolet", "Celta"): ("1.8",),
+            ("Nissan", "Sentra"): ("1.0 L3",),
+            ("Ford", "F-150"): ("2.0 L4",),
+        }
+        for record in self.seed["records"]:
+            for prefix in forbidden.get((record["make"], record["model"]), ()):
+                self.assertFalse(
+                    (record.get("engine") or "").startswith(prefix), record
+                )
+
+    def test_expected_models_present(self):
+        models = {(record["make"], record["model"]) for record in self.seed["records"]}
+        self.assertIn(("Chevrolet", "Camaro"), models)
+        self.assertIn(("Ford", "F-150"), models)
+
+    def test_no_elf_rubia_brand(self):
+        for record in self.seed["records"]:
+            if "Rubia" in record["oil_name"]:
+                self.assertEqual(record["oil_brand"], "Total")
+
     def test_no_duplicates(self):
         keys = [tuple(sorted(record.items())) for record in self.seed["records"]]
         self.assertEqual(len(keys), len(set(keys)))

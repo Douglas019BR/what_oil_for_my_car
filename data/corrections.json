@@ -66,6 +66,60 @@
         "year_to": 2023,
         "capacity_liters": 4.5
       }
+    },
+    {
+      "action": "fix",
+      "match": {
+        "make": "Chevrolet",
+        "model": "SUBURBAN",
+        "engine": "5.3 V8 DFI 16V(F) 6.2 V8 DFI 16V(F)"
+      },
+      "set": {
+        "engine": "6.2 V8 DFI 16V(F)"
+      }
+    },
+    {
+      "action": "fix",
+      "match": {
+        "make": "Chevrolet",
+        "model": "SUBURBAN",
+        "engine": "5.3 V8 DFI 16V(G)"
+      },
+      "set": {
+        "year_from": 2017,
+        "year_to": 2017
+      }
+    },
+    {
+      "action": "fix",
+      "match": {
+        "make": "BMW",
+        "model": "X5 xDrive 30d M Sport",
+        "engine": "3.0 L6 CRDi-E/TD 24V(D) 3.0 L6 DFI/Bi-TB 24V(G)"
+      },
+      "set": {
+        "engine": "3.0 L6 CRDi-E/TD 24V(D)"
+      }
+    },
+    {
+      "action": "fix",
+      "match": {
+        "oil_name": "Elf Rubia Optima 1100 15W-40"
+      },
+      "set": {
+        "oil_brand": "Total",
+        "oil_name": "Total Rubia Optima 1100 15W-40"
+      }
+    },
+    {
+      "action": "fix",
+      "match": {
+        "oil_name": "Elf Rubia Optima 1100 FE 10W-30"
+      },
+      "set": {
+        "oil_brand": "Total",
+        "oil_name": "Total Rubia Optima 1100 FE 10W-30"
+      }
     }
   ]
 }

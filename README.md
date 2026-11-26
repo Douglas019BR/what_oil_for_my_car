@@ -53,6 +53,32 @@ Documentação da API: `http://localhost:8000/docs`.
 
 Endpoints: `GET /api/makes`, `/api/models`, `/api/variants`, `/api/recommendations`, `/api/health`.
 
+## Serviço no servidor (Docker Compose)
+
+O mesmo arquivo `docker-compose.yml` sobe o banco e a aplicação. No primeiro boot, o entrypoint
+aguarda o Postgres e carrega `data/seed.json` automaticamente; em boots seguintes ele preserva os
+dados existentes.
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Acesse `http://<ip-do-servidor>:8000`. Para alterar a porta ou a senha do banco, defina `APP_PORT`
+e `POSTGRES_PASSWORD` no `.env` **antes** do primeiro boot. O banco fica no volume
+`what_oil_pgdata`, ambos os serviços têm `restart: unless-stopped` e healthchecks.
+
+Comandos úteis:
+
+```bash
+docker compose ps
+docker compose logs -f app
+curl http://localhost:8000/api/health
+docker compose down
+```
+
+Se usar a versão antiga do Docker Compose, substitua `docker compose` por `docker-compose`.
+
 ## Testes e qualidade
 
 ```bash

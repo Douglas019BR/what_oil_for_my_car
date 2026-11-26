@@ -8,7 +8,7 @@
       "Valvoline-Tabela-de-Veiculos-Leves-2023.pdf",
       "Tabela-YPF-Leves-2026-06.pdf"
     ],
-    "record_count": 6473
+    "record_count": 6471
   },
   "records": [
     {
@@ -6125,20 +6125,6 @@
       "oil_brand": "Ipiranga",
       "oil_name": "F1 Master Sintético 5W40 SP",
       "sae_viscosity": "5W-40",
-      "oil_type": "Sintético",
-      "notes": null,
-      "source_pdf": "Tabela-Ipiranga-F1-Master-2025.pdf"
-    },
-    {
-      "make": "BMW",
-      "model": "120i Sport",
-      "engine": "2.0 L4 DFI TB 16V",
-      "year_from": 2015,
-      "year_to": 2019,
-      "capacity_liters": 5.25,
-      "oil_brand": "Ipiranga",
-      "oil_name": "F1 Master Sintético 5W30 C2/C3",
-      "sae_viscosity": "5W-30",
       "oil_type": "Sintético",
       "notes": null,
       "source_pdf": "Tabela-Ipiranga-F1-Master-2025.pdf"
@@ -52874,20 +52860,6 @@
       "oil_type": "Sintético",
       "notes": null,
       "source_pdf": "Tabela-Lubrificacao-PDV.pdf"
-    },
-    {
-      "make": "Mercedes-Benz",
-      "model": "Classe A 250",
-      "engine": "2.0 L4 DFI TB 16V",
-      "year_from": 2014,
-      "year_to": 2019,
-      "capacity_liters": 5.6,
-      "oil_brand": "Ipiranga",
-      "oil_name": "F1 Master Sintético 5W40 SN 508",
-      "sae_viscosity": "5W-40",
-      "oil_type": "Sintético",
-      "notes": null,
-      "source_pdf": "Tabela-Ipiranga-F1-Master-2025.pdf"
     },
     {
       "make": "Mercedes-Benz",

@@ -120,6 +120,24 @@
         "oil_brand": "Total",
         "oil_name": "Total Rubia Optima 1100 FE 10W-30"
       }
+    },
+    {
+      "action": "drop",
+      "match": {
+        "make": "BMW",
+        "model": "120i Sport",
+        "engine": "2.0 L4 DFI TB 16V",
+        "oil_name": "F1 Master Sintético 5W30 C2/C3"
+      }
+    },
+    {
+      "action": "drop",
+      "match": {
+        "make": "Mercedes-Benz",
+        "model": "Classe A 250",
+        "engine": "2.0 L4 DFI TB 16V",
+        "oil_name": "F1 Master Sintético 5W40 SN 508"
+      }
     }
   ]
 }

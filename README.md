@@ -30,7 +30,7 @@ O Postgres fica disponível em `localhost:5433` (banco/usuário/senha `whatoil`)
 2. Cada tabela é revisada e curada em um fragmento `data/raw/seed_*.json` (um por PDF). Esses
    fragmentos são versionados e preservam a curadoria original; o `data/seed.json` é gerado deles.
 3. `scripts/merge_seeds.py` normaliza, valida, aplica `data/corrections.json` (correções revisadas
-   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 6.473
+   de linhas desalinhadas), remove duplicatas e gera `data/seed.json` (versionado, com 6.471
    recomendações de 7 fabricantes de óleo).
 
 Fontes ativas (a mais recente substitui a anterior do mesmo fabricante):

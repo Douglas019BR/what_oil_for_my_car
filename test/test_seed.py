@@ -3,7 +3,46 @@ import re
 import unittest
 from pathlib import Path
 
-SEED_PATH = Path(__file__).resolve().parent.parent / "data" / "seed.json"
+ROOT = Path(__file__).resolve().parent.parent
+SEED_PATH = ROOT / "data" / "seed.json"
+IPIRANGA_RAW = ROOT / "data" / "raw" / "Tabela-Ipiranga-F1-Master-2025-raw.txt"
+
+IPIRANGA_CODES = {
+    "F1 Master Sintético 0W20 SP": 1,
+    "F1 Master Sintético 5W30 SP": 2,
+    "F1 Master Sintético 0W30 C2": 3,
+    "F1 Master Sintético 5W30 C2/C3": 4,
+    "F1 Master Sintético 5W40 SP": 5,
+    "F1 Master Sintético 5W40 SN 508": 6,
+    "F1 Master Sintético 5W40 SN 502": 7,
+    "F1 Master Performance 10W30 SP": 8,
+    "F1 Master Performance 10W40 SP": 9,
+    "F1 Master Sintético 10W40 SP": 10,
+    "Brutus Performance 15W40 CK-4": 11,
+    "Brutus Sintético 10W40 E4": 12,
+    "Brutus Performance CI 15W40": 13,
+    "Brutus Alta Performance 15W40 CI-4": 14,
+    "Brutus Protection T5 15W40 CH-4": 15,
+}
+
+
+def codes_in(text):
+    return {int(value) for value in re.findall(r"\b(1[0-5]|[1-9])\b", text)}
+
+
+def row_codes(lines, index):
+    line = lines[index]
+    parts = re.split(
+        r"(?<![\d.])(?:1[0-5]|[1-9])(?:\s*,\s*(?:1[0-5]|[1-9]))*\s*$", line
+    )
+    found = codes_in(line[len(parts[0]) :]) if len(parts) > 1 else set()
+    if found:
+        return found
+    if index + 1 < len(lines) and re.fullmatch(
+        r"(?:\d{1,2}\s*,\s*)*\d{1,2}", lines[index + 1]
+    ):
+        return codes_in(lines[index + 1])
+    return set()
 
 
 class SeedTests(unittest.TestCase):
@@ -88,6 +127,28 @@ class SeedTests(unittest.TestCase):
         for record in self.seed["records"]:
             if "Rubia" in record["oil_name"]:
                 self.assertEqual(record["oil_brand"], "Total")
+
+    def test_all_ipiranga_codes_match_source(self):
+        lines = [
+            line.strip()
+            for line in IPIRANGA_RAW.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        unsupported = []
+        for record in self.seed["records"]:
+            if record["source_pdf"] != "Tabela-Ipiranga-F1-Master-2025.pdf":
+                continue
+            code = IPIRANGA_CODES.get(record["oil_name"])
+            engine = record.get("engine") or ""
+            supported = any(
+                engine in line
+                and (not record.get("year_from") or str(record["year_from"]) in line)
+                and code in row_codes(lines, index)
+                for index, line in enumerate(lines[43:], start=43)
+            )
+            if not supported:
+                unsupported.append((record["model"], engine, record["oil_name"]))
+        self.assertEqual(unsupported, [])
 
     def test_no_standalone_code_bleed(self):
         source = "Tabela-Ipiranga-F1-Master-2025.pdf"

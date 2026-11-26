@@ -10,6 +10,29 @@ const countEl = document.getElementById('result-count');
 let selectedVariant = null;
 let recommendationRequestId = 0;
 
+const themeToggle = document.getElementById('theme-toggle');
+const THEME_KEY = 'what-oil-theme';
+
+function preferredTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeToggle.textContent = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
+  themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+}
+
+themeToggle.addEventListener('click', () => {
+  const next = preferredTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+});
+
+applyTheme(preferredTheme());
+
 function setStatus(message) {
   statusEl.textContent = message;
 }

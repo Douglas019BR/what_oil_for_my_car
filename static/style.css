@@ -1,7 +1,44 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
+  --bg: #f5f7fa;
+  --fg: #1c2530;
+  --muted: #5d6a7a;
+  --surface: #fff;
+  --border: #c6d0dc;
+  --border-soft: #e6ebf1;
+  --table-head: #eef2f7;
+  --button-bg: #fff;
+  --button-border: #c6d0dc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121821;
+    --fg: #e8edf3;
+    --muted: #a8b4c3;
+    --surface: #1e2733;
+    --border: #3a4859;
+    --border-soft: #33404f;
+    --table-head: #263240;
+    --button-bg: #1e2733;
+    --button-border: #3a4859;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121821;
+  --fg: #e8edf3;
+  --muted: #a8b4c3;
+  --surface: #1e2733;
+  --border: #3a4859;
+  --border-soft: #33404f;
+  --table-head: #263240;
+  --button-bg: #1e2733;
+  --button-border: #3a4859;
 }
 
 * {
@@ -11,20 +48,21 @@
 body {
   margin: 0;
   padding: 2rem 1rem;
-  background: #f5f7fa;
-  color: #1c2530;
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #121821;
-    color: #e8edf3;
-  }
+  background: var(--bg);
+  color: var(--fg);
 }
 
 .container {
   max-width: 960px;
   margin: 0 auto;
+}
+
+header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 header h1 {
@@ -34,14 +72,28 @@ header h1 {
 
 header p {
   margin: 0 0 2rem;
-  color: #5d6a7a;
+  color: var(--muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  header p,
-  footer p {
-    color: #a8b4c3;
-  }
+.theme-toggle {
+  flex: none;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--button-border);
+  border-radius: 8px;
+  background: var(--button-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--muted);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
 }
 
 .filters {
@@ -62,10 +114,10 @@ label {
 select {
   width: 100%;
   padding: 0.65rem 0.75rem;
-  border: 1px solid #c6d0dc;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
-  color: #1c2530;
+  background: var(--surface);
+  color: var(--fg);
   font: inherit;
 }
 
@@ -73,49 +125,26 @@ select:disabled {
   opacity: 0.6;
 }
 
-@media (prefers-color-scheme: dark) {
-  select {
-    background: #1e2733;
-    color: #e8edf3;
-    border-color: #3a4859;
-  }
-}
-
 .status {
   min-height: 1.5rem;
-  color: #5d6a7a;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
 .empty {
   padding: 2rem 1rem;
   text-align: center;
-  color: #5d6a7a;
-  background: #fff;
-  border: 1px dashed #c6d0dc;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px dashed var(--border);
   border-radius: 12px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .empty {
-    background: #1e2733;
-    border-color: #3a4859;
-    color: #a8b4c3;
-  }
 }
 
 .table-wrapper {
   overflow-x: auto;
-  background: #fff;
-  border: 1px solid #dde4ec;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .table-wrapper {
-    background: #1e2733;
-    border-color: #3a4859;
-  }
 }
 
 table {
@@ -128,26 +157,13 @@ th,
 td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #e6ebf1;
+  border-bottom: 1px solid var(--border-soft);
   vertical-align: top;
 }
 
-@media (prefers-color-scheme: dark) {
-  th,
-  td {
-    border-color: #33404f;
-  }
-}
-
 th {
-  background: #eef2f7;
+  background: var(--table-head);
   white-space: nowrap;
-}
-
-@media (prefers-color-scheme: dark) {
-  th {
-    background: #263240;
-  }
 }
 
 tbody tr:last-child td {
@@ -157,20 +173,13 @@ tbody tr:last-child td {
 .result-count {
   padding: 0.75rem 1rem;
   margin: 0;
-  color: #5d6a7a;
-  border-top: 1px solid #e6ebf1;
+  color: var(--muted);
+  border-top: 1px solid var(--border-soft);
   font-size: 0.85rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .result-count {
-    color: #a8b4c3;
-    border-color: #33404f;
-  }
 }
 
 footer {
   margin-top: 2rem;
   font-size: 0.8rem;
-  color: #5d6a7a;
+  color: var(--muted);
 }

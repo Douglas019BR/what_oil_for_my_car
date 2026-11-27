@@ -1,3 +1,4 @@
+import hashlib
 import json
 from contextlib import contextmanager
 from pathlib import Path
@@ -48,7 +49,9 @@ def _unique_records(records):
 
 
 def initialize(dsn, seed_path=SEED_PATH, reset=True):
-    seed = json.loads(Path(seed_path).read_text(encoding="utf-8"))
+    seed_bytes = Path(seed_path).read_bytes()
+    digest = hashlib.sha256(seed_bytes).hexdigest()
+    seed = json.loads(seed_bytes)
     records = _unique_records(seed["records"])
     brands = sorted({record["oil_brand"] for record in records}, key=_sort_key)
     oils = sorted(
@@ -82,6 +85,15 @@ def initialize(dsn, seed_path=SEED_PATH, reset=True):
             apply_schema(conn)
         else:
             apply_migrations(conn)
+            with conn.cursor() as cur:
+                stored = cur.execute(
+                    "SELECT value FROM app_meta WHERE key = 'seed_sha256'"
+                ).fetchone()
+                count = cur.execute(
+                    "SELECT COUNT(*) AS count FROM recommendations"
+                ).fetchone()["count"]
+                if stored and stored["value"] == digest and count > 0:
+                    return {"cached": True, "recommendations": count}
         with conn.cursor() as cur:
             cur.executemany(
                 "INSERT INTO oil_brands (name) VALUES (%s) "
@@ -174,6 +186,11 @@ def initialize(dsn, seed_path=SEED_PATH, reset=True):
                 "(vehicle_id, oil_id, capacity_liters, source_pdf, notes) "
                 "VALUES (%s, %s, %s, %s, %s)",
                 recommendations,
+            )
+            cur.execute(
+                "INSERT INTO app_meta (key, value) VALUES ('seed_sha256', %s) "
+                "ON CONFLICT (key) DO UPDATE SET value = excluded.value",
+                (digest,),
             )
 
     return {

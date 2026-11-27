@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app import db
 from app.config import database_url
 from app.log_config import configure_logging
-from app.rate_limit import allow
+from app.rate_limit import allow, client_ip
 
 configure_logging()
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -22,9 +22,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 @app.middleware("http")
 async def request_pipeline(request: Request, call_next):
     start = time.monotonic()
-    if request.url.path.startswith("/api/") and not allow(
-        request.client.host if request.client else "unknown"
-    ):
+    if request.url.path.startswith("/api/") and not allow(client_ip(request)):
         logger.warning("rate_limit_exceeded path=%s", request.url.path)
         return JSONResponse(status_code=429, content={"detail": "Too many requests"})
     response = await call_next(request)

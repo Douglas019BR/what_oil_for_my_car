@@ -14,6 +14,13 @@ def limit_per_minute():
         return 120
 
 
+def client_ip(request):
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 def allow(ip):
     limit = limit_per_minute()
     if limit <= 0:
@@ -23,6 +30,9 @@ def allow(ip):
         window = _hits[ip]
         while window and now - window[0] > 60:
             window.popleft()
+        if not window:
+            _hits.pop(ip, None)
+            window = _hits[ip]
         if len(window) >= limit:
             return False
         window.append(now)

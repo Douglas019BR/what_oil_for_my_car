@@ -2,6 +2,12 @@ DROP TABLE IF EXISTS recommendations;
 DROP TABLE IF EXISTS vehicles;
 DROP TABLE IF EXISTS oils;
 DROP TABLE IF EXISTS oil_brands;
+DROP TABLE IF EXISTS app_meta;
+
+CREATE TABLE app_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 
 CREATE TABLE oil_brands (
     id SERIAL PRIMARY KEY,

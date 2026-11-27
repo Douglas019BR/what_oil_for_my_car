@@ -108,7 +108,8 @@ Todos os serviços têm `restart: unless-stopped`; `db` e `app` têm healthcheck
 
 ### Proxy, HTTPS e autenticação
 
-Por padrão o Caddy publica HTTP na porta `80`. Para HTTPS automático, defina
+Por padrão o Caddy publica HTTP na porta `80`, sem autenticação — use essa configuração apenas em
+rede confiável. Para expor o serviço, configure HTTPS e autenticação antes. Para HTTPS automático, defina
 `SITE_ADDRESS=seu.dominio.com` e libere `80`/`443`; o Caddy obtém e renova o certificado. Para
 proteger o acesso, use `CADDYFILE=Caddyfile.auth` e gere o hash da senha:
 
@@ -126,7 +127,8 @@ O serviço `backup` executa `pg_dump` no primeiro boot e depois a cada `BACKUP_I
 (padrão 7). Restaure com:
 
 ```bash
-docker compose exec -T db psql -U whatoil -d whatoil < backups/what_oil-AAAAAMMDD-HHMMSS.dump
+docker compose exec -T db pg_restore --clean --if-exists -U whatoil -d whatoil \
+  /backups/what_oil-YYYYMMDD-HHMMSS.dump
 ```
 
 ### Logs e limites
@@ -135,7 +137,8 @@ docker compose exec -T db psql -U whatoil -d whatoil < backups/what_oil-AAAAAMMD
   requisição `/api/*` gera um registro com método, caminho, status e duração. Configure rotação
   de logs no Docker (por exemplo `log-driver=json-file` com `max-size=10m`).
 - `RATE_LIMIT_PER_MINUTE` (padrão `120`, `0` desativa) limita requisições `/api/*` por IP e
-  devolve `429` quando excedido.
+  devolve `429` quando excedido. Atrás do Caddy, a chave vem do primeiro valor de
+  `X-Forwarded-For`, não do IP do proxy.
 
 ### Comandos úteis
 

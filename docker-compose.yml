@@ -10,6 +10,7 @@ services:
       - "127.0.0.1:5433:5432"
     volumes:
       - what_oil_pgdata:/var/lib/postgresql/data
+      - ./backups:/backups:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-whatoil} -d ${POSTGRES_DB:-whatoil}"]
       interval: 5s

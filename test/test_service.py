@@ -46,6 +46,7 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue((ROOT / "deploy" / "Caddyfile.auth").exists())
         self.assertTrue((ROOT / "deploy" / "backup.sh").exists())
         self.assertTrue((ROOT / "sql" / "migrations" / "001_initial.sql").exists())
+        self.assertTrue((ROOT / "sql" / "migrations" / "002_app_meta.sql").exists())
 
     def test_dockerignore_excludes_dev_artifacts(self):
         self.assertIn(".venv", self.dockerignore)
@@ -55,7 +56,8 @@ class ServiceTests(unittest.TestCase):
     def test_bootstrap_keeps_existing_data(self):
         before = db.healthcheck(self.dsn)
         wait_for_database(self.dsn, timeout=5)
-        db.initialize(self.dsn, reset=False)
+        result = db.initialize(self.dsn, reset=False)
+        self.assertTrue(result.get("cached"))
         self.assertEqual(db.healthcheck(self.dsn), before)
         with db.connection(self.dsn) as conn:
             versions = {
@@ -65,6 +67,7 @@ class ServiceTests(unittest.TestCase):
                 ).fetchall()
             }
         self.assertIn("001_initial", versions)
+        self.assertIn("002_app_meta", versions)
 
 
 if __name__ == "__main__":

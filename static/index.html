@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Qual óleo para meu carro?</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <div>
+          <h1>Qual óleo para meu carro?</h1>
+          <p>
+            Escolha seu veículo e veja os lubrificantes recomendados pelas tabelas dos fabricantes.
+          </p>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
+          Modo escuro
+        </button>
+      </header>
+
+      <section class="filters" aria-label="Filtros de veículo">
+        <label>
+          <span>Marca</span>
+          <select id="make">
+            <option value="">Selecione a marca</option>
+          </select>
+        </label>
+        <label>
+          <span>Modelo</span>
+          <select id="model" disabled>
+            <option value="">Selecione o modelo</option>
+          </select>
+        </label>
+        <label>
+          <span>Motor / ano</span>
+          <select id="variant" disabled>
+            <option value="">Todas as versões</option>
+          </select>
+        </label>
+      </section>
+
+      <p id="status" class="status" role="status"></p>
+
+      <section class="results" aria-label="Resultados">
+        <div id="empty" class="empty">
+          Selecione uma marca e um modelo para ver as recomendações.
+        </div>
+        <div id="table-wrapper" class="table-wrapper" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th>Fabricante</th>
+                <th>Produto</th>
+                <th>Viscosidade</th>
+                <th>Tipo</th>
+                <th>Capacidade</th>
+                <th>Observação</th>
+                <th>Fonte</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+          <p id="result-count" class="result-count"></p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          As informações são orientativas e podem sofrer alterações sem aviso prévio.
+          Consulte sempre o manual do seu veículo antes de trocar o óleo.
+        </p>
+      </footer>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

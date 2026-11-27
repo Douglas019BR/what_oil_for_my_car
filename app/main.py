@@ -1,18 +1,42 @@
 import logging
+import time
 from pathlib import Path
 
 import psycopg
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import db
 from app.config import database_url
+from app.log_config import configure_logging
+from app.rate_limit import allow
 
+configure_logging()
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Qual óleo para meu carro")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.middleware("http")
+async def request_pipeline(request: Request, call_next):
+    start = time.monotonic()
+    if request.url.path.startswith("/api/") and not allow(
+        request.client.host if request.client else "unknown"
+    ):
+        logger.warning("rate_limit_exceeded path=%s", request.url.path)
+        return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+    response = await call_next(request)
+    elapsed_ms = round((time.monotonic() - start) * 1000, 1)
+    logger.info(
+        "request method=%s path=%s status=%s duration_ms=%s",
+        request.method,
+        request.url.path,
+        response.status_code,
+        elapsed_ms,
+    )
+    return response
 
 
 @app.get("/")

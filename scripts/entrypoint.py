@@ -8,7 +8,7 @@ import psycopg
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import database_url
-from app.db import connection, initialize
+from app.db import initialize
 
 
 def wait_for_database(dsn, timeout=60):
@@ -24,26 +24,10 @@ def wait_for_database(dsn, timeout=60):
             time.sleep(2)
 
 
-def ensure_initialized(dsn):
-    with connection(dsn) as conn:
-        table = conn.execute(
-            "SELECT to_regclass('public.recommendations') AS name"
-        ).fetchone()["name"]
-        count = (
-            conn.execute("SELECT COUNT(*) AS count FROM recommendations").fetchone()[
-                "count"
-            ]
-            if table
-            else 0
-        )
-    if count == 0:
-        initialize(dsn)
-
-
 def main():
     dsn = database_url()
     wait_for_database(dsn)
-    ensure_initialized(dsn)
+    initialize(dsn, reset=False)
     port = os.environ.get("PORT", "8000")
     os.execv(
         sys.executable,

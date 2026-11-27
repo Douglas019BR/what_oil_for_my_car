@@ -34,12 +34,17 @@ def main():
     parser.add_argument("--dsn", help="Override the database URL")
     parser.add_argument("--seed", default=str(SEED_PATH), help="Path to seed.json")
     parser.add_argument("--create-database", action="store_true")
+    parser.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Drop and recreate the schema (destructive; use only for local development)",
+    )
     args = parser.parse_args()
 
     dsn = args.dsn or database_url(test=args.test)
     if args.create_database:
         ensure_database(dsn)
-    stats = initialize(dsn, Path(args.seed))
+    stats = initialize(dsn, Path(args.seed), reset=args.rebuild)
     print(f"Loaded {dsn.rstrip('/').split('/')[-1]}: {stats}")
     print(f"Verified {healthcheck(dsn)} recommendation rows")
 

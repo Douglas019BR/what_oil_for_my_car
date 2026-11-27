@@ -32,18 +32,25 @@ images/                     PDFs de origem (6 tabelas, 2014-2026)
 data/raw/                   textos extraídos e fragmentos curados (seed_*.json)
 data/seed.json              base única versionada, gerada pelos fragmentos
 data/corrections.json       correções revisadas aplicadas na mesclagem
-sql/schema.sql              DDL das 4 tabelas do Postgres
+sql/schema.sql              DDL de reconstrução do Postgres
+sql/migrations/             migrações idempotentes aplicadas no boot
 app/config.py               URL do banco e variáveis de ambiente
-app/db.py                   queries e carga inicial
+app/db.py                   queries e carga/atualização do seed
+app/migrations.py           aplicação versionada das migrações
+app/log_config.py           logs estruturados (JSON por padrão)
+app/rate_limit.py           limite de requisições por IP
 app/main.py                 FastAPI: página estática + API JSON
 scripts/dump_pdf_text.py    pdftotext nos modos -layout e -raw
 scripts/merge_seeds.py      normaliza/valida/mescla os fragmentos
-scripts/build_db.py         aplica o schema e carrega o seed
-scripts/entrypoint.py       espera o DB, semeia se vazio, inicia o uvicorn
+scripts/build_db.py         migra/carrega o seed; --rebuild recria tudo (destrutivo)
+scripts/entrypoint.py       espera o DB, aplica migrações, atualiza o seed, inicia o uvicorn
 scripts/extract_tables.py   extração opcional via AWS Textract
+deploy/Caddyfile            proxy reverso HTTP (padrão)
+deploy/Caddyfile.auth       proxy reverso com autenticação básica
+deploy/backup.sh            dump periódico do Postgres com retenção
 static/                     index.html, style.css, app.js (sem frameworks)
-test/                       testes unitários (seed, DB, API, serviço, tema)
-docker-compose.yml          serviços db + app
+test/                       testes unitários (seed, DB, API, serviço, tema, limites)
+docker-compose.yml          serviços db + app + caddy + backup
 Dockerfile / .dockerignore  imagem da aplicação (usuário não-root)
 verify.sh                   lint, formatação, ortografia, segredos e testes
 ```
@@ -93,16 +100,51 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-O entrypoint espera o Postgres, carrega `data/seed.json` no primeiro boot e preserva os dados nos
-boots seguintes. A aplicação escuta na porta definida por `APP_PORT` (padrão `8000`); o banco fica
-no volume `what_oil_pgdata`. Ambos os serviços têm `restart: unless-stopped` e healthchecks.
-Defina `POSTGRES_PASSWORD` no `.env` **antes** do primeiro boot.
+O entrypoint espera o Postgres, aplica as migrações pendentes e atualiza as recomendações das
+fontes presentes no seed, sem apagar tabelas nem dados de outras fontes. A aplicação escuta apenas
+em `127.0.0.1:8000`; o acesso externo passa pelo Caddy. O banco fica no volume `what_oil_pgdata`.
+Todos os serviços têm `restart: unless-stopped`; `db` e `app` têm healthchecks. Defina
+`POSTGRES_PASSWORD` no `.env` **antes** do primeiro boot.
+
+### Proxy, HTTPS e autenticação
+
+Por padrão o Caddy publica HTTP na porta `80`. Para HTTPS automático, defina
+`SITE_ADDRESS=seu.dominio.com` e libere `80`/`443`; o Caddy obtém e renova o certificado. Para
+proteger o acesso, use `CADDYFILE=Caddyfile.auth` e gere o hash da senha:
+
+```bash
+docker run --rm --entrypoint caddy caddy:2-alpine hash-password --plaintext 'sua-senha'
+```
+
+Cole o hash em `BASIC_AUTH_HASH` e ajuste `BASIC_AUTH_USER` no `.env`. A autenticação fica no
+proxy — a aplicação não tem login próprio.
+
+### Backup
+
+O serviço `backup` executa `pg_dump` no primeiro boot e depois a cada `BACKUP_INTERVAL` segundos
+(padrão 86400). Os arquivos ficam em `./backups/` com retenção de `BACKUP_RETENTION_DAYS` dias
+(padrão 7). Restaure com:
+
+```bash
+docker compose exec -T db psql -U whatoil -d whatoil < backups/what_oil-AAAAAMMDD-HHMMSS.dump
+```
+
+### Logs e limites
+
+- `LOG_LEVEL` (padrão `INFO`) e `LOG_JSON` (padrão `true`) controlam os logs da aplicação; cada
+  requisição `/api/*` gera um registro com método, caminho, status e duração. Configure rotação
+  de logs no Docker (por exemplo `log-driver=json-file` com `max-size=10m`).
+- `RATE_LIMIT_PER_MINUTE` (padrão `120`, `0` desativa) limita requisições `/api/*` por IP e
+  devolve `429` quando excedido.
+
+### Comandos úteis
 
 ```bash
 docker compose ps
 docker compose logs -f app
-curl http://localhost:8000/api/health
+curl http://localhost/api/health
 docker compose down
+docker compose up -d --build
 ```
 
 ## Atualizando os dados
@@ -113,7 +155,8 @@ docker compose down
 3. Adicione o fragmento à lista `FRAGMENTS` em `scripts/merge_seeds.py`. Se uma tabela substitui
    uma anterior do mesmo fabricante, remova a antiga da lista (ela fica no repositório como histórico).
 4. Registre correções pontuais em `data/corrections.json` e rode `scripts/merge_seeds.py`.
-5. Rode `scripts/build_db.py`, depois `bash verify.sh`.
+5. Rode `scripts/build_db.py` (atualização não destrutiva) ou `scripts/build_db.py --rebuild`
+   (apenas em desenvolvimento: apaga e recria as tabelas), depois `bash verify.sh`.
 
 ## Testes e qualidade
 
@@ -121,10 +164,10 @@ docker compose down
 bash verify.sh
 ```
 
-Executa `compileall`, ruff (lint e formatação), codespell, detect-secrets e 44 testes unitários.
+Executa `compileall`, ruff (lint e formatação), codespell, detect-secrets e 50 testes unitários.
 Os testes usam o banco `what_oil_test` e recriam o schema a cada execução. Há testes semânticos
 contra os textos de origem (códigos de produto, anos e combinações modelo/motor impossíveis),
-além de testes de API, do serviço Docker e do tema claro/escuro.
+além de testes de API, migrações, serviço Docker, tema claro/escuro e limite de requisições.
 
 ## Fontes ativas
 

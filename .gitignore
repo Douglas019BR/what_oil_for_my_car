@@ -208,3 +208,6 @@ __marimo__/
 
 # Generated PDF text dumps (curated seed_*.json fragments are versioned)
 data/raw/*.txt
+
+# Database backups
+backups/

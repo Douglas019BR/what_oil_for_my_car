@@ -37,5 +37,9 @@ CREATE TABLE recommendations (
     UNIQUE (vehicle_id, oil_id, capacity_liters, source_pdf, notes)
 );
 
+CREATE UNIQUE INDEX idx_vehicles_identity ON vehicles (
+    make, model, COALESCE(engine, ''), COALESCE(year_from, 0), COALESCE(year_to, 0)
+);
 CREATE INDEX idx_vehicles_make_model ON vehicles (make, model);
 CREATE INDEX idx_recommendations_vehicle ON recommendations (vehicle_id);
+CREATE INDEX idx_recommendations_source ON recommendations (source_pdf);

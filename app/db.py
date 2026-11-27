@@ -5,6 +5,8 @@ from pathlib import Path
 import psycopg
 from psycopg.rows import dict_row
 
+from app.migrations import apply_migrations
+
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = ROOT / "sql" / "schema.sql"
 SEED_PATH = ROOT / "data" / "seed.json"
@@ -45,7 +47,7 @@ def _unique_records(records):
     return list(result.values())
 
 
-def initialize(dsn, seed_path=SEED_PATH):
+def initialize(dsn, seed_path=SEED_PATH, reset=True):
     seed = json.loads(Path(seed_path).read_text(encoding="utf-8"))
     records = _unique_records(seed["records"])
     brands = sorted({record["oil_brand"] for record in records}, key=_sort_key)
@@ -76,10 +78,14 @@ def initialize(dsn, seed_path=SEED_PATH):
     )
 
     with connection(dsn) as conn, conn.transaction():
-        apply_schema(conn)
+        if reset:
+            apply_schema(conn)
+        else:
+            apply_migrations(conn)
         with conn.cursor() as cur:
             cur.executemany(
-                "INSERT INTO oil_brands (name) VALUES (%s)",
+                "INSERT INTO oil_brands (name) VALUES (%s) "
+                "ON CONFLICT (name) DO NOTHING",
                 [(brand,) for brand in brands],
             )
             cur.execute("SELECT id, name FROM oil_brands")
@@ -87,7 +93,8 @@ def initialize(dsn, seed_path=SEED_PATH):
 
             cur.executemany(
                 "INSERT INTO oils (brand_id, name, sae_viscosity, oil_type) "
-                "VALUES (%s, %s, %s, %s)",
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (brand_id, name) DO NOTHING",
                 [
                     (brand_ids[brand], name, viscosity, oil_type)
                     for brand, name, viscosity, oil_type in oils
@@ -106,7 +113,9 @@ def initialize(dsn, seed_path=SEED_PATH):
 
             cur.executemany(
                 "INSERT INTO vehicles (make, model, engine, year_from, year_to) "
-                "VALUES (%s, %s, %s, %s, %s)",
+                "VALUES (%s, %s, %s, %s, %s) "
+                "ON CONFLICT (make, model, COALESCE(engine, ''), "
+                "COALESCE(year_from, 0), COALESCE(year_to, 0)) DO NOTHING",
                 vehicles,
             )
             cur.execute(
@@ -155,6 +164,11 @@ def initialize(dsn, seed_path=SEED_PATH):
             for item in candidates:
                 unique_recommendations.setdefault(tuple(item), item)
             recommendations = sorted(unique_recommendations.values(), key=_sort_key)
+            if not reset:
+                cur.execute(
+                    "DELETE FROM recommendations WHERE source_pdf = ANY(%s)",
+                    (sorted({record["source_pdf"] for record in records}),),
+                )
             cur.executemany(
                 "INSERT INTO recommendations "
                 "(vehicle_id, oil_id, capacity_liters, source_pdf, notes) "
